@@ -6,20 +6,25 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("References")]
+    [SerializeField] Transform neck;
+    [SerializeField] Transform head;
+    [SerializeField] Transform eyes;
     private CharacterController controller;
     private PlayerInput playerInput;
+
+    [Header("Input Varibles")]
     private Vector2 currentMovementInput;
+    private Vector3 playerDirection;
+    private Vector3 lastVelocity;
     
     [Header("Speed Settings")]
-    private float currentSpeed;
     [SerializeField] float crouchSpeed = 3f;
     [SerializeField] float walkSpeed = 6f;
     [SerializeField] float sprintSpeed = 12f;
     [SerializeField] float lerpTime = 6f;
     [SerializeField] float airLerpTime = 1f;
+    private float currentSpeed;
     float threshold = 0.01f;
-    private Vector3 playerDirection;
-    private Vector3 lastVelocity;
 
     [Header("Gravity Settings")]
     [SerializeField] float gravity = -9.81f;
@@ -38,14 +43,22 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float groundDistance = 1.1f;
     private bool isGrounded => Physics.CheckSphere(transform.position, groundDistance, groundMask);
 
+    [Header("Player Headbob Settings")]
+    private float headBobSprintSpeed = 22f;
+    private float headBobWalkSpeed = 14f;
+    private float headBobCrouchSpeed = 10f;
+    private float headBobSprintIntensity = 0.2f;
+    private float headBobWalkIntensity = 0.1f;
+    private float headBobCrouchIntensity = 0.05f;
+    private Vector2 headBobVector = Vector2.zero;
+    private float headBobIndex = 0.0f;
+    private float headBobCurrentIntensity = 0.0f;
+
     [Header("States")]
     private bool isMoving;
     private bool isWalking;
     private bool isSprinting;
     private bool isCrouching;
-
-    
-    
 
     void Awake()
     {
@@ -60,7 +73,6 @@ public class PlayerMovement : MonoBehaviour
         isCrouching = false;
     }
 
-    
     void Update()
     {
         if (currentMovementInput == Vector2.zero)
@@ -77,6 +89,11 @@ public class PlayerMovement : MonoBehaviour
         CrouchHandler();
         JumpHandler();
         MovementHandler();
+    }
+
+    void LateUpdate()
+    {
+        HeadBobbingHandler();
     }
 
     void applyGravity()
@@ -106,6 +123,42 @@ public class PlayerMovement : MonoBehaviour
             currentSpeed = Mathf.Lerp(currentSpeed, sprintSpeed, Time.deltaTime * lerpTime);
         }
 
+    }
+
+    void HeadBobbingHandler()
+    {
+        if (isCrouching)
+        {
+            headBobCurrentIntensity = headBobCrouchIntensity;
+            headBobIndex += headBobCrouchSpeed * Time.deltaTime;
+        }
+        else if (isWalking)
+        {
+            headBobCurrentIntensity = headBobWalkIntensity;
+            headBobIndex += headBobWalkSpeed * Time.deltaTime;
+        }
+        else  if (isSprinting)
+        {
+            headBobCurrentIntensity = headBobSprintIntensity;
+            headBobIndex += headBobSprintSpeed * Time.deltaTime;
+        }
+
+        if (isGrounded && isMoving)
+        {
+            headBobVector.y = Mathf.Sin(headBobIndex);
+            headBobVector.x = Mathf.Sin(headBobIndex / 2);
+
+            eyes.localPosition = Vector3.Lerp(eyes.localPosition, head.localPosition + new Vector3(headBobVector.x * headBobCurrentIntensity, headBobVector.y * headBobCurrentIntensity, 0), Time.deltaTime * lerpTime);
+        }
+        else
+        {
+            eyes.localPosition = Vector3.Lerp(eyes.localPosition, head.localPosition + Vector3.zero, Time.deltaTime * lerpTime);
+
+            if (Vector3.Distance(eyes.localPosition, head.localPosition) <= 0.001f)
+            {
+                eyes.localPosition = head.localPosition + Vector3.zero;
+            }
+        }
     }
 
     void CrouchHandler()
@@ -162,8 +215,6 @@ public class PlayerMovement : MonoBehaviour
 
         lastVelocity = controller.velocity;
     }
-
-
 
     public void OnMove(InputAction.CallbackContext context)
     {
