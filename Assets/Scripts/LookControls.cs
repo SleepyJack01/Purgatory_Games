@@ -46,7 +46,6 @@ public class LookControls : MonoBehaviour
         CalculateInput();
     }
 
-    
     void LateUpdate()
     {
         PositionCamera();
@@ -81,8 +80,8 @@ public class LookControls : MonoBehaviour
 
             totalMouseDelta += mouseDelta;
 
-            lookX = totalMouseDelta.x * sensitivity * Time.deltaTime;
-            lookY = totalMouseDelta.y * sensitivity * Time.deltaTime;
+            lookX = totalMouseDelta.x * sensitivity;
+            lookY = totalMouseDelta.y * sensitivity;
         }
         else if (playerInput.currentControlScheme == "Gamepad")
         {

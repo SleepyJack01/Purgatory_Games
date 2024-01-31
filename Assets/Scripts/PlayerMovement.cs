@@ -110,15 +110,15 @@ public class PlayerMovement : MonoBehaviour
 
     void SpeedHandler()
     {
-        if (isCrouching)
+        if (isCrouching && isGrounded)
         {
             currentSpeed = Mathf.Lerp(currentSpeed, crouchSpeed, Time.deltaTime * lerpTime);
         }
-        else if (isWalking)
+        else if (isWalking && isGrounded)
         {
             currentSpeed = Mathf.Lerp(currentSpeed, walkSpeed, Time.deltaTime * lerpTime);
         }
-        else if (isSprinting)
+        else if (isSprinting && isGrounded)
         {
             currentSpeed = Mathf.Lerp(currentSpeed, sprintSpeed, Time.deltaTime * lerpTime);
         }
@@ -237,7 +237,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void OnJump(InputAction.CallbackContext context)
     {
-        if (context.performed && isGrounded)
+        if (context.performed && isGrounded && !isCrouching)
         {
             verticalVelocity = jumpForce;
         }
