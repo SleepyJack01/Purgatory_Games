@@ -7,9 +7,13 @@ public class LookControls : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] Camera cam;
+    [SerializeField] Transform neck;
+    [SerializeField] Transform head;
+    [SerializeField] Transform eyes;
     [SerializeField] Transform playerBody;
     [SerializeField] Transform camPostion;
     [SerializeField] PlayerInput playerInput;
+    [SerializeField] PlayerMovement playerMovement;
 
     [Header("Sensitivity Settings")]
     [SerializeField] float mouseSensitivity = 10f;
@@ -18,6 +22,8 @@ public class LookControls : MonoBehaviour
 
     [Header("Camera Settings")]
     [SerializeField] float cameraClamp = 90f;
+    [SerializeField] float freeLookMaxAngle = 120f;
+    [SerializeField] private float freeLookTiltAmount = 0.2f;
 
     // Look controls
     private Vector2 lookInput;
@@ -28,17 +34,20 @@ public class LookControls : MonoBehaviour
     private float lookX;
     private float lookY;
     private float xRotation = 0f;
+    private float yRotation = 0f;
 
     void Awake()
     {
         playerInput = GetComponent<PlayerInput>();
         playerInput.onControlsChanged += ctx => SetSensitivity();
+        playerMovement = GetComponent<PlayerMovement>();
     }
 
     void Start()
     {
         SetSensitivity();
         Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     void Update()
@@ -48,7 +57,6 @@ public class LookControls : MonoBehaviour
 
     void LateUpdate()
     {
-        PositionCamera();
         ApplyCameraRotation();
     }
 
@@ -90,20 +98,29 @@ public class LookControls : MonoBehaviour
         }
     }
 
-    // Attach the camera to the players "head"
-    void PositionCamera()
-    {
-        cam.transform.position = camPostion.position;
-    }
-
     // Apply the rotation to the camera and player
     void ApplyCameraRotation()
     {
-        xRotation -= lookY;
-        xRotation = Mathf.Clamp(xRotation, -cameraClamp, cameraClamp);
-        
-        playerBody.Rotate(Vector3.up * lookX);
-        cam.transform.rotation = Quaternion.Euler(xRotation, camPostion.rotation.eulerAngles.y, 0f);
+
+        if (playerMovement.isFreelooking)
+        {
+            yRotation += lookX;
+            yRotation = Mathf.Clamp(yRotation, -freeLookMaxAngle, freeLookMaxAngle);
+            neck.transform.localRotation = Quaternion.Euler(0f, yRotation, 0f);
+            eyes.transform.localRotation = Quaternion.Euler(0f, 0f, yRotation * freeLookTiltAmount);
+
+        }
+        else
+        {
+            xRotation -= lookY;
+            xRotation = Mathf.Clamp(xRotation, -cameraClamp, cameraClamp);
+
+            yRotation = 0f;
+            neck.transform.localRotation = Quaternion.Lerp(neck.transform.localRotation, Quaternion.Euler(0f, 0f, 0f), Time.deltaTime * 6f);
+            eyes.transform.localRotation = Quaternion.Lerp(eyes.transform.localRotation, Quaternion.Euler(0f, 0f, 0f), Time.deltaTime * 6f);
+            playerBody.Rotate(Vector3.up * lookX);
+            head.transform.rotation = Quaternion.Euler(xRotation, camPostion.rotation.eulerAngles.y, 0f);
+        }
     }
 
     // Gets the raw input from the input system

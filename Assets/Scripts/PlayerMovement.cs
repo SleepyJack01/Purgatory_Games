@@ -21,6 +21,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float crouchSpeed = 3f;
     [SerializeField] float walkSpeed = 6f;
     [SerializeField] float sprintSpeed = 12f;
+    [SerializeField] private float slideSpeed = 14f;
     [SerializeField] float lerpTime = 6f;
     [SerializeField] float airLerpTime = 1f;
     private float currentSpeed;
@@ -37,6 +38,12 @@ public class PlayerMovement : MonoBehaviour
     private bool canStand;
     private bool crouchPressed;
     private Vector3 crouchStandCheckPosition;
+
+    [Header("Sliding Settings")]
+    [SerializeField] private float slideTimerMax = 1.5f;
+    private float slideTimer = 0.0f;
+    private Vector2 slideDirection;
+    
     
     [Header("Ground Check Settings")]
     [SerializeField] LayerMask groundMask;
@@ -44,6 +51,7 @@ public class PlayerMovement : MonoBehaviour
     private bool isGrounded => Physics.CheckSphere(transform.position, groundDistance, groundMask);
 
     [Header("Player Headbob Settings")]
+    [SerializeField] bool enableHeadBob = true;
     private float headBobSprintSpeed = 22f;
     private float headBobWalkSpeed = 14f;
     private float headBobCrouchSpeed = 10f;
@@ -59,6 +67,8 @@ public class PlayerMovement : MonoBehaviour
     private bool isWalking;
     private bool isSprinting;
     private bool isCrouching;
+    [HideInInspector] public bool isFreelooking;
+    private bool isSliding;
 
     void Awake()
     {
@@ -87,13 +97,17 @@ public class PlayerMovement : MonoBehaviour
         applyGravity();
         SpeedHandler();
         CrouchHandler();
+        SlideHandler();
         JumpHandler();
         MovementHandler();
     }
 
     void LateUpdate()
     {
-        HeadBobbingHandler();
+        if (enableHeadBob)
+        {
+            HeadBobbingHandler();
+        }  
     }
 
     void applyGravity()
@@ -114,6 +128,10 @@ public class PlayerMovement : MonoBehaviour
         {
             currentSpeed = Mathf.Lerp(currentSpeed, crouchSpeed, Time.deltaTime * lerpTime);
         }
+        else if (isSliding)
+        {
+            currentSpeed = (slideTimer + 0.2f) * slideSpeed;
+        }
         else if (isWalking && isGrounded)
         {
             currentSpeed = Mathf.Lerp(currentSpeed, walkSpeed, Time.deltaTime * lerpTime);
@@ -122,7 +140,6 @@ public class PlayerMovement : MonoBehaviour
         {
             currentSpeed = Mathf.Lerp(currentSpeed, sprintSpeed, Time.deltaTime * lerpTime);
         }
-
     }
 
     void HeadBobbingHandler()
@@ -173,8 +190,19 @@ public class PlayerMovement : MonoBehaviour
             // If player is crouching, reduce player's height
             controller.height = Mathf.Lerp(controller.height, 1f, Time.deltaTime * lerpTime);
             isCrouching = true;
+
+            if (isSprinting && isMoving)
+            {
+                isSliding = true;
+                slideTimer = slideTimerMax;
+                slideDirection = (transform.forward * currentMovementInput.y + transform.right * currentMovementInput.x);
+
+                isFreelooking = true;
+                isWalking = false;
+                isSprinting = false;
+            }
         }
-        else if (!crouchPressed && canStand)
+        else if (!crouchPressed && canStand && !isSliding)
         {
             float newHeight = Mathf.Lerp(controller.height, 2f, Time.deltaTime * lerpTime);
             float heightDifference = newHeight - controller.height;
@@ -185,6 +213,19 @@ public class PlayerMovement : MonoBehaviour
             }
             isCrouching = false;
         }   
+    }
+
+    void SlideHandler()
+    {
+        if (isSliding)
+        {
+            slideTimer -= Time.deltaTime;
+            if (slideTimer <= 0)
+            {
+                isSliding = false;
+                isFreelooking = false;
+            }
+        }
     }
 
     void JumpHandler()
@@ -202,6 +243,11 @@ public class PlayerMovement : MonoBehaviour
         else if (isMoving)
         {
             playerDirection = Vector3.Lerp(playerDirection,(transform.forward * currentMovementInput.y + transform.right * currentMovementInput.x), Time.deltaTime * airLerpTime);
+        }
+
+        if (isSliding)
+        {
+            controller.Move(slideDirection * currentSpeed * Time.deltaTime);
         }
 
         if (playerDirection.magnitude >= threshold)
@@ -252,6 +298,18 @@ public class PlayerMovement : MonoBehaviour
         else if (context.canceled)
         {
             crouchPressed = false;
+        }
+    }
+
+    public void OnFreelook(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            isFreelooking = true;
+        }
+        else if (context.canceled)
+        {
+            isFreelooking = false;
         }
     }
 }

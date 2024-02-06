@@ -285,11 +285,11 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 330585543}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1207649441}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &330585547
@@ -455,7 +455,7 @@ Transform:
   - {fileID: 2102069392}
   - {fileID: 1406104597}
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &410087039
 GameObject:
@@ -677,7 +677,7 @@ Transform:
   - {fileID: 1459807538}
   - {fileID: 1980318970}
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &570614513
 MonoBehaviour:
@@ -692,12 +692,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cam: {fileID: 330585545}
+  neck: {fileID: 1980318970}
+  head: {fileID: 1076682607}
+  eyes: {fileID: 1207649441}
   playerBody: {fileID: 570614512}
   camPostion: {fileID: 1207649441}
   playerInput: {fileID: 570614514}
+  playerMovement: {fileID: 570614515}
   mouseSensitivity: 0.1
   controllerSensitivity: 100
   cameraClamp: 90
+  freeLookMaxAngle: 120
+  freeLookTiltAmount: 0.2
 --- !u!114 &570614514
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -816,6 +822,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 09f21470-de9f-4a5e-8373-dc54558138d1
     m_ActionName: PlayerControls/Crouch[/Keyboard/ctrl,/XInputControllerWindows/buttonEast]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 570614515}
+        m_TargetAssemblyTypeName: PlayerMovement, Assembly-CSharp
+        m_MethodName: OnFreelook
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 81ab5069-5324-469e-b518-58b1c02e8807
+    m_ActionName: PlayerControls/Freelook[/Keyboard/alt,/XInputControllerWindows/rightStickPress]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: PlayerControls
@@ -839,14 +861,18 @@ MonoBehaviour:
   crouchSpeed: 3
   walkSpeed: 6
   sprintSpeed: 12
+  slideSpeed: 14
   lerpTime: 6
   airLerpTime: 1
   gravity: -9.81
   jumpForce: 5
+  slideTimerMax: 1.5
   groundMask:
     serializedVersion: 2
     m_Bits: 8
   groundDistance: 1.1
+  enableHeadBob: 1
+  isFreelooking: 0
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -955,7 +981,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 330585546}
   m_Father: {fileID: 1076682607}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -971,7 +998,7 @@ GameObject:
   - component: {fileID: 1406104596}
   - component: {fileID: 1406104595}
   - component: {fileID: 1406104594}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1151,7 +1178,7 @@ Transform:
   - {fileID: 410087041}
   - {fileID: 832575519}
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2102069388
 GameObject:
