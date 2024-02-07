@@ -107,11 +107,24 @@ public class LookControls : MonoBehaviour
             yRotation += lookX;
             yRotation = Mathf.Clamp(yRotation, -freeLookMaxAngle, freeLookMaxAngle);
             neck.transform.localRotation = Quaternion.Euler(0f, yRotation, 0f);
-            eyes.transform.localRotation = Quaternion.Euler(0f, 0f, yRotation * freeLookTiltAmount);
+            if (playerMovement.isSliding)
+            {
+                eyes.transform.localRotation = Quaternion.Lerp(eyes.transform.localRotation, Quaternion.Euler(0f, 0f, -7f), Time.deltaTime * 6f);
+                // Lower the head to give the illusion of sliding
+                head.transform.localPosition = Vector3.Lerp(head.transform.localPosition, new Vector3(0, -0.4f, 0), Time.deltaTime * 6f);
+            }
+            else
+            {
+                eyes.transform.localRotation = Quaternion.Euler(0f, 0f, yRotation * freeLookTiltAmount);
+            }
+            
 
         }
         else
         {
+            // Raise the head back to normal position
+            head.transform.localPosition = Vector3.Lerp(head.transform.localPosition, Vector3.zero, Time.deltaTime * 6f);
+
             xRotation -= lookY;
             xRotation = Mathf.Clamp(xRotation, -cameraClamp, cameraClamp);
 

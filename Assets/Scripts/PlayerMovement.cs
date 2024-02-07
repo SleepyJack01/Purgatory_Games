@@ -21,7 +21,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float crouchSpeed = 3f;
     [SerializeField] float walkSpeed = 6f;
     [SerializeField] float sprintSpeed = 12f;
-    [SerializeField] private float slideSpeed = 14f;
+    [SerializeField] private float slideSpeed = 16f;
     [SerializeField] float lerpTime = 6f;
     [SerializeField] float airLerpTime = 1f;
     private float currentSpeed;
@@ -41,6 +41,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Sliding Settings")]
     [SerializeField] private float slideTimerMax = 1.5f;
+    private bool sprintButtonHeld = false;
     private float slideTimer = 0.0f;
     private Vector2 slideDirection;
     
@@ -68,7 +69,7 @@ public class PlayerMovement : MonoBehaviour
     private bool isSprinting;
     private bool isCrouching;
     [HideInInspector] public bool isFreelooking;
-    private bool isSliding;
+    [HideInInspector] public bool isSliding;
 
     void Awake()
     {
@@ -96,10 +97,13 @@ public class PlayerMovement : MonoBehaviour
 
         applyGravity();
         SpeedHandler();
-        CrouchHandler();
         SlideHandler();
         JumpHandler();
+        CrouchHandler();
         MovementHandler();
+        
+
+        Debug.Log(controller.velocity.magnitude);
     }
 
     void LateUpdate()
@@ -124,13 +128,13 @@ public class PlayerMovement : MonoBehaviour
 
     void SpeedHandler()
     {
-        if (isCrouching && isGrounded)
+        if (isCrouching && isGrounded && !isSliding)
         {
             currentSpeed = Mathf.Lerp(currentSpeed, crouchSpeed, Time.deltaTime * lerpTime);
         }
         else if (isSliding)
         {
-            currentSpeed = (slideTimer + 0.2f) * slideSpeed;
+            currentSpeed = (Mathf.Pow(slideTimer, 2) + 0.2f) * slideSpeed;
         }
         else if (isWalking && isGrounded)
         {
@@ -185,24 +189,26 @@ public class PlayerMovement : MonoBehaviour
         // Check if player can stand up
         canStand = !Physics.CheckSphere(crouchStandCheckPosition, controller.radius);
         
-        if (crouchPressed)
+        if (crouchPressed || isSliding)
         {
             // If player is crouching, reduce player's height
             controller.height = Mathf.Lerp(controller.height, 1f, Time.deltaTime * lerpTime);
-            isCrouching = true;
 
             if (isSprinting && isMoving)
             {
                 isSliding = true;
                 slideTimer = slideTimerMax;
                 slideDirection = (transform.forward * currentMovementInput.y + transform.right * currentMovementInput.x);
-
                 isFreelooking = true;
-                isWalking = false;
-                isSprinting = false;
+                
             }
+        
+            isWalking = false;
+            isSprinting = false;
+            isCrouching = true;
         }
-        else if (!crouchPressed && canStand && !isSliding)
+
+        else if (canStand)
         {
             float newHeight = Mathf.Lerp(controller.height, 2f, Time.deltaTime * lerpTime);
             float heightDifference = newHeight - controller.height;
@@ -211,6 +217,17 @@ public class PlayerMovement : MonoBehaviour
             {
                 controller.Move(new Vector3(0, heightDifference / 2, 0));
             }
+            
+            if (sprintButtonHeld)
+            {
+                isSprinting = true;
+                isWalking = false;
+            }
+            else if (!sprintButtonHeld && !isSliding)
+            {
+                isWalking = true;
+            }
+            
             isCrouching = false;
         }   
     }
@@ -224,6 +241,17 @@ public class PlayerMovement : MonoBehaviour
             {
                 isSliding = false;
                 isFreelooking = false;
+
+                if (isCrouching)
+                {
+                    crouchPressed = false;
+                }
+
+                if (sprintButtonHeld)
+                {
+                    isSprinting = true;
+                    isWalking = false;
+                }
             }
         }
     }
@@ -269,15 +297,11 @@ public class PlayerMovement : MonoBehaviour
 
     public void OnSprint(InputAction.CallbackContext context)
     {
-        if (context.performed)
+        sprintButtonHeld = context.performed;
+        if (!isSliding)
         {
-            isWalking = false;
-            isSprinting = true;
-        }
-        else if (context.canceled)
-        {
-            isWalking = true;
-            isSprinting = false;
+            isSprinting = context.performed;
+            isWalking = !isSprinting;
         }
     }
 
@@ -291,13 +315,17 @@ public class PlayerMovement : MonoBehaviour
 
     public void OnCrouch(InputAction.CallbackContext context)
     {
-        if (context.performed)
+        crouchPressed = context.performed;
+        if (!isSliding)
         {
-            crouchPressed = true;
-        }
-        else if (context.canceled)
-        {
-            crouchPressed = false;
+            if (crouchPressed)
+            {
+                isCrouching = true;
+            }
+            else
+            {
+                isCrouching = false;
+            }
         }
     }
 
