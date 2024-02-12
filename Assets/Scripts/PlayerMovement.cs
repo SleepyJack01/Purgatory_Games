@@ -9,13 +9,15 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] Transform neck;
     [SerializeField] Transform head;
     [SerializeField] Transform eyes;
+    [SerializeField] Animator cameraAnimator;
     private CharacterController controller;
     private PlayerInput playerInput;
 
     [Header("Input Varibles")]
     private Vector2 currentMovementInput;
     private Vector3 playerDirection;
-    private Vector3 lastVelocity;
+    private Vector3 previousPosition;
+    private float lastVerticalVelocity;
     
     [Header("Speed Settings")]
     [SerializeField] float crouchSpeed = 3f;
@@ -43,7 +45,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float slideTimerMax = 1.5f;
     private bool sprintButtonHeld = false;
     private float slideTimer = 0.0f;
-    private Vector2 slideDirection;
+    private Vector3 slideDirection;
     
     
     [Header("Ground Check Settings")]
@@ -68,6 +70,7 @@ public class PlayerMovement : MonoBehaviour
     private bool isWalking;
     private bool isSprinting;
     private bool isCrouching;
+    private bool isAnimating;
     [HideInInspector] public bool isFreelooking;
     [HideInInspector] public bool isSliding;
 
@@ -75,6 +78,7 @@ public class PlayerMovement : MonoBehaviour
     {
         controller = GetComponent<CharacterController>();
         playerInput = GetComponent<PlayerInput>();
+        previousPosition = transform.position;
     }
 
     void Start()
@@ -99,11 +103,17 @@ public class PlayerMovement : MonoBehaviour
         SpeedHandler();
         SlideHandler();
         JumpHandler();
+        LandingHandler();
         CrouchHandler();
         MovementHandler();
-        
 
-        Debug.Log(controller.velocity.magnitude);
+        // Set slideDirection when a slide is initiated
+        if (isSliding && slideTimer == slideTimerMax)
+        {
+            slideDirection = playerDirection;
+        }
+
+        Debug.Log("lastVelocity: " + lastVerticalVelocity);
     }
 
     void LateUpdate()
@@ -112,6 +122,14 @@ public class PlayerMovement : MonoBehaviour
         {
             HeadBobbingHandler();
         }  
+
+        // Calculate vertical velocity
+        Vector3 newPosition = transform.position;
+        float verticalVelocity = (newPosition.y - previousPosition.y) / Time.deltaTime;
+        lastVerticalVelocity = verticalVelocity;
+
+        // Store the current position for the next frame
+        previousPosition = newPosition;
     }
 
     void applyGravity()
@@ -134,7 +152,7 @@ public class PlayerMovement : MonoBehaviour
         }
         else if (isSliding)
         {
-            currentSpeed = (Mathf.Pow(slideTimer, 2) + 0.2f) * slideSpeed;
+            currentSpeed = Mathf.Min((Mathf.Pow(slideTimer, 2) + 0.2f) * slideSpeed, 16);
         }
         else if (isWalking && isGrounded)
         {
@@ -198,7 +216,6 @@ public class PlayerMovement : MonoBehaviour
             {
                 isSliding = true;
                 slideTimer = slideTimerMax;
-                slideDirection = (transform.forward * currentMovementInput.y + transform.right * currentMovementInput.x);
                 isFreelooking = true;
                 
             }
@@ -262,6 +279,27 @@ public class PlayerMovement : MonoBehaviour
         controller.Move(verticalMove * Time.deltaTime);
     }
 
+    void LandingHandler()
+    {
+        if (isGrounded && !isSliding)
+        {
+            if (lastVerticalVelocity < -10 && !isAnimating)
+            {
+                cameraAnimator.SetTrigger("CameraRollTrigger");
+                isAnimating = true;
+            }
+            else if (lastVerticalVelocity < -4 && !isAnimating)
+            {
+                cameraAnimator.SetTrigger("CameraLandTrigger");
+                isAnimating = true;
+            }
+        }
+        else
+        {
+            isAnimating = false;
+        }
+    }
+
     void MovementHandler()
     {
         if (isGrounded)
@@ -277,17 +315,17 @@ public class PlayerMovement : MonoBehaviour
         {
             controller.Move(slideDirection * currentSpeed * Time.deltaTime);
         }
-
-        if (playerDirection.magnitude >= threshold)
-        {
-            controller.Move(playerDirection * currentSpeed * Time.deltaTime);
-        }
         else
         {
-            controller.Move(Vector3.MoveTowards(playerDirection, Vector3.zero, Time.deltaTime * lerpTime) * currentSpeed * Time.deltaTime);
+            if (playerDirection.magnitude >= threshold)
+            {
+                controller.Move(playerDirection * currentSpeed * Time.deltaTime);
+            }
+            else
+            {
+                controller.Move(Vector3.MoveTowards(playerDirection, Vector3.zero, Time.deltaTime * lerpTime) * currentSpeed * Time.deltaTime);
+            }
         }
-
-        lastVelocity = controller.velocity;
     }
 
     public void OnMove(InputAction.CallbackContext context)
@@ -298,11 +336,6 @@ public class PlayerMovement : MonoBehaviour
     public void OnSprint(InputAction.CallbackContext context)
     {
         sprintButtonHeld = context.performed;
-        if (!isSliding)
-        {
-            isSprinting = context.performed;
-            isWalking = !isSprinting;
-        }
     }
 
     public void OnJump(InputAction.CallbackContext context)
@@ -310,6 +343,15 @@ public class PlayerMovement : MonoBehaviour
         if (context.performed && isGrounded && !isCrouching)
         {
             verticalVelocity = jumpForce;
+            if (!isAnimating)
+            {
+                cameraAnimator.SetTrigger("CameraJumpTrigger");
+                isAnimating = true;
+            }
+            else
+            {
+                cameraAnimator.ResetTrigger("CameraJumpTrigger");
+            }  
         }
     }
 
@@ -331,13 +373,6 @@ public class PlayerMovement : MonoBehaviour
 
     public void OnFreelook(InputAction.CallbackContext context)
     {
-        if (context.performed)
-        {
-            isFreelooking = true;
-        }
-        else if (context.canceled)
-        {
-            isFreelooking = false;
-        }
+        isFreelooking = context.performed;
     }
 }

@@ -117,8 +117,6 @@ public class LookControls : MonoBehaviour
             {
                 eyes.transform.localRotation = Quaternion.Euler(0f, 0f, yRotation * freeLookTiltAmount);
             }
-            
-
         }
         else
         {
@@ -128,11 +126,11 @@ public class LookControls : MonoBehaviour
             xRotation -= lookY;
             xRotation = Mathf.Clamp(xRotation, -cameraClamp, cameraClamp);
 
-            yRotation = 0f;
             neck.transform.localRotation = Quaternion.Lerp(neck.transform.localRotation, Quaternion.Euler(0f, 0f, 0f), Time.deltaTime * 6f);
             eyes.transform.localRotation = Quaternion.Lerp(eyes.transform.localRotation, Quaternion.Euler(0f, 0f, 0f), Time.deltaTime * 6f);
+            yRotation = 0f;
             playerBody.Rotate(Vector3.up * lookX);
-            head.transform.rotation = Quaternion.Euler(xRotation, camPostion.rotation.eulerAngles.y, 0f);
+            head.transform.rotation = Quaternion.Euler(xRotation, neck.rotation.eulerAngles.y, 0f);
         }
     }
 

@@ -153,7 +153,7 @@ public partial class @PlayerInputs : IInputActionCollection2, IDisposable
                     ""name"": """",
                     ""id"": ""b0d9e3d3-ee7c-4d13-90f4-354a07c3a2c0"",
                     ""path"": ""<Keyboard>/shift"",
-                    ""interactions"": """",
+                    ""interactions"": ""Press"",
                     ""processors"": """",
                     ""groups"": ""Keyboard and Mouse"",
                     ""action"": ""Run"",
