@@ -141,7 +141,7 @@ public class PlayerMovement : MonoBehaviour
             slideDirection = playerDirection;
         }
 
-        Debug.Log(controller.velocity.magnitude);
+        Debug.Log(isAnimating);
     }
 
     void LateUpdate()
@@ -341,14 +341,14 @@ public class PlayerMovement : MonoBehaviour
     void WallRunHandler()
     {
 
-        if (controller.velocity.magnitude > 9 && !isGrounded && CheckWall() && !isWallRunning)
+        if (controller.velocity.magnitude > 9 && !isGrounded && CheckWall() && !isWallRunning && sprintButtonHeld)
         {
             wallRunTimer = wallRunTimerMax;
             isWallRunning = true;
             isFreelooking = true;
             wallRunDirection = playerDirection;  
         }
-        else if (!CheckWall() || !isSprinting || isGrounded || controller.velocity.magnitude < 9)
+        else if (!CheckWall() || isGrounded || controller.velocity.magnitude < 9 || !sprintButtonHeld)
         {
             isWallRunning = false;
 
@@ -388,6 +388,10 @@ public class PlayerMovement : MonoBehaviour
             {
                 cameraAnimator.SetTrigger("CameraLandTrigger");
                 isAnimating = true;
+            }
+            else
+            {
+                isAnimating = false;
             }
         }
         else
@@ -448,10 +452,6 @@ public class PlayerMovement : MonoBehaviour
                 cameraAnimator.SetTrigger("CameraJumpTrigger");
                 isAnimating = true;
             }
-            else
-            {
-                cameraAnimator.ResetTrigger("CameraJumpTrigger");
-            }  
         }
         else if (context.performed && isWallRunning)
         {
