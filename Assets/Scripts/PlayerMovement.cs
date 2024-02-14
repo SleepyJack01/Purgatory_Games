@@ -18,11 +18,13 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 playerDirection;
     private Vector3 previousPosition;
     private float lastVerticalVelocity;
+    private bool freeLookButtonPressed;
     
     [Header("Speed Settings")]
     [SerializeField] float crouchSpeed = 3f;
     [SerializeField] float walkSpeed = 6f;
     [SerializeField] float sprintSpeed = 12f;
+    [SerializeField] float wallRunSpeed = 12f;
     [SerializeField] private float slideSpeed = 16f;
     [SerializeField] float lerpTime = 6f;
     [SerializeField] float airLerpTime = 1f;
@@ -33,8 +35,10 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float gravity = -9.81f;
 
     [Header("Jump Settings")]
-    private float verticalVelocity;
     [SerializeField] float jumpForce = 5f;
+    private float verticalVelocity;
+    private Vector3 verticalMove;
+    
 
     [Header("Crouch Settings")]
     private bool canStand;
@@ -46,12 +50,33 @@ public class PlayerMovement : MonoBehaviour
     private bool sprintButtonHeld = false;
     private float slideTimer = 0.0f;
     private Vector3 slideDirection;
-    
+
+    [Header("Wall Running Settings")]
+    [SerializeField] LayerMask wallMask;
+    [ SerializeField] private float wallRayDistance = 1f;
+    [SerializeField] private float wallRunGravity = -1f;
+    [SerializeField] private float wallRunTimerMax = 2f;
+    [SerializeField] private float wallJumpForce = 5f;
+    private float wallRunTimer = 0.0f;
+    private Vector3 wallRunDirection;
+    private float horizontalVelocity;
+    [HideInInspector] public bool wallRunRight;
+    [HideInInspector] public bool wallRunLeft;
+
     
     [Header("Ground Check Settings")]
     [SerializeField] LayerMask groundMask;
     [SerializeField] float groundDistance = 1.1f;
-    private bool isGrounded => Physics.CheckSphere(transform.position, groundDistance, groundMask);
+    private bool isGrounded
+    {
+        get
+        {
+            // Cast a ray downwards from the player's position
+            Ray ray = new Ray(transform.position, -transform.up);
+            // Check if the ray hits the ground within the specified distance
+            return Physics.Raycast(ray, groundDistance, groundMask);
+        }
+    }
 
     [Header("Player Headbob Settings")]
     [SerializeField] bool enableHeadBob = true;
@@ -73,6 +98,7 @@ public class PlayerMovement : MonoBehaviour
     private bool isAnimating;
     [HideInInspector] public bool isFreelooking;
     [HideInInspector] public bool isSliding;
+    [HideInInspector] public bool isWallRunning;
 
     void Awake()
     {
@@ -102,6 +128,8 @@ public class PlayerMovement : MonoBehaviour
         applyGravity();
         SpeedHandler();
         SlideHandler();
+        CheckWall();
+        WallRunHandler();
         JumpHandler();
         LandingHandler();
         CrouchHandler();
@@ -113,7 +141,7 @@ public class PlayerMovement : MonoBehaviour
             slideDirection = playerDirection;
         }
 
-        Debug.Log("lastVelocity: " + lastVerticalVelocity);
+        Debug.Log(controller.velocity.magnitude);
     }
 
     void LateUpdate()
@@ -138,9 +166,14 @@ public class PlayerMovement : MonoBehaviour
         {
             verticalVelocity = -2f;
         }
+        else if (isWallRunning)
+        {
+            verticalVelocity = Mathf.Lerp(verticalVelocity, wallRunGravity, Time.deltaTime * lerpTime);
+        }
         else
         {
             verticalVelocity += gravity * Time.deltaTime;
+            horizontalVelocity = Mathf.Lerp(horizontalVelocity, 0, Time.deltaTime * lerpTime);
         }
     }
 
@@ -153,6 +186,10 @@ public class PlayerMovement : MonoBehaviour
         else if (isSliding)
         {
             currentSpeed = Mathf.Min((Mathf.Pow(slideTimer, 2) + 0.2f) * slideSpeed, 16);
+        }
+        else if (isWallRunning)
+        {
+            currentSpeed = Mathf.Lerp(currentSpeed, wallRunSpeed, Time.deltaTime * lerpTime);
         }
         else if (isWalking && isGrounded)
         {
@@ -171,6 +208,11 @@ public class PlayerMovement : MonoBehaviour
             headBobCurrentIntensity = headBobCrouchIntensity;
             headBobIndex += headBobCrouchSpeed * Time.deltaTime;
         }
+         else if (isWallRunning)
+        {
+            headBobCurrentIntensity = headBobSprintIntensity;
+            headBobIndex += headBobSprintSpeed * Time.deltaTime;
+        }
         else if (isWalking)
         {
             headBobCurrentIntensity = headBobWalkIntensity;
@@ -182,7 +224,7 @@ public class PlayerMovement : MonoBehaviour
             headBobIndex += headBobSprintSpeed * Time.deltaTime;
         }
 
-        if (isGrounded && isMoving)
+        if (isGrounded && isMoving || isWallRunning)
         {
             headBobVector.y = Mathf.Sin(headBobIndex);
             headBobVector.x = Mathf.Sin(headBobIndex / 2);
@@ -273,9 +315,63 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    private bool CheckWall()
+    {
+        // Ray to the right
+        Ray rightRay = new Ray(transform.position, transform.right);
+        if (Physics.Raycast(rightRay, wallRayDistance, wallMask))
+        {
+            wallRunRight = true;
+            return true;
+        }
+
+        // Ray to the left
+        Ray leftRay = new Ray(transform.position, -transform.right);
+        if (Physics.Raycast(leftRay, wallRayDistance, wallMask))
+        {
+            wallRunLeft = true;
+            return true;
+        }
+
+        wallRunRight = false;
+        wallRunLeft = false;
+        return false;
+    }
+
+    void WallRunHandler()
+    {
+
+        if (controller.velocity.magnitude > 9 && !isGrounded && CheckWall() && !isWallRunning)
+        {
+            wallRunTimer = wallRunTimerMax;
+            isWallRunning = true;
+            isFreelooking = true;
+            wallRunDirection = playerDirection;  
+        }
+        else if (!CheckWall() || !isSprinting || isGrounded || controller.velocity.magnitude < 9)
+        {
+            isWallRunning = false;
+
+            if (!isSliding && !freeLookButtonPressed)
+            {
+                isFreelooking = false;
+            }
+        }
+
+        if (isWallRunning)
+        {
+            wallRunTimer -= Time.deltaTime;
+            if (wallRunTimer <= 0)
+            {
+                isWallRunning = false;
+                isFreelooking = false;
+            }
+        }
+    }
+
     void JumpHandler()
     {
-        Vector3 verticalMove = new Vector3(0, verticalVelocity, 0);
+        verticalMove = new Vector3(0, verticalVelocity, 0);
         controller.Move(verticalMove * Time.deltaTime);
     }
 
@@ -315,6 +411,10 @@ public class PlayerMovement : MonoBehaviour
         {
             controller.Move(slideDirection * currentSpeed * Time.deltaTime);
         }
+        else if (isWallRunning)
+        {
+            controller.Move(wallRunDirection * currentSpeed * Time.deltaTime);
+        }
         else
         {
             if (playerDirection.magnitude >= threshold)
@@ -353,6 +453,21 @@ public class PlayerMovement : MonoBehaviour
                 cameraAnimator.ResetTrigger("CameraJumpTrigger");
             }  
         }
+        else if (context.performed && isWallRunning)
+        {
+            verticalVelocity = jumpForce;
+            if (wallRunRight)
+            {
+                playerDirection += -transform.right * wallJumpForce;
+            }
+            else if (wallRunLeft)
+            {
+                playerDirection += transform.right * wallJumpForce;
+            }
+            wallRunTimer = 0;
+            isWallRunning = false;
+            isFreelooking = false;
+        }
     }
 
     public void OnCrouch(InputAction.CallbackContext context)
@@ -373,6 +488,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void OnFreelook(InputAction.CallbackContext context)
     {
+        freeLookButtonPressed = context.performed;
         isFreelooking = context.performed;
     }
 }

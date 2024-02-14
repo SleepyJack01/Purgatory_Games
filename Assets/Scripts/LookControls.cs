@@ -24,6 +24,8 @@ public class LookControls : MonoBehaviour
     [SerializeField] float cameraClamp = 90f;
     [SerializeField] float freeLookMaxAngle = 120f;
     [SerializeField] private float freeLookTiltAmount = 0.2f;
+    [SerializeField] private float slideTiltAmount = -7f;
+    [SerializeField] private float wallRunTiltAmount = 9f;
 
     // Look controls
     private Vector2 lookInput;
@@ -109,9 +111,22 @@ public class LookControls : MonoBehaviour
             neck.transform.localRotation = Quaternion.Euler(0f, yRotation, 0f);
             if (playerMovement.isSliding)
             {
-                eyes.transform.localRotation = Quaternion.Lerp(eyes.transform.localRotation, Quaternion.Euler(0f, 0f, -7f), Time.deltaTime * 6f);
+                eyes.transform.localRotation = Quaternion.Lerp(eyes.transform.localRotation, Quaternion.Euler(0f, 0f, slideTiltAmount), Time.deltaTime * 6f);
                 // Lower the head to give the illusion of sliding
                 head.transform.localPosition = Vector3.Lerp(head.transform.localPosition, new Vector3(0, -0.4f, 0), Time.deltaTime * 6f);
+            }
+            else if (playerMovement.isWallRunning)
+            {
+                if (playerMovement.wallRunRight)
+                {
+                    eyes.transform.localRotation = Quaternion.Lerp(eyes.transform.localRotation, Quaternion.Euler(0f, 0f, wallRunTiltAmount), Time.deltaTime * 6f);
+                    head.transform.localPosition = Vector3.Lerp(head.transform.localPosition, new Vector3(-0.2f, -0.1f, 0f), Time.deltaTime * 6f);
+                }
+                else if (playerMovement.wallRunLeft)
+                {
+                    eyes.transform.localRotation = Quaternion.Lerp(eyes.transform.localRotation, Quaternion.Euler(0f, 0f, -wallRunTiltAmount), Time.deltaTime * 6f);
+                    head.transform.localPosition = Vector3.Lerp(head.transform.localPosition, new Vector3(0.2f, -0.1f, 0f), Time.deltaTime * 6f);
+                }
             }
             else
             {
