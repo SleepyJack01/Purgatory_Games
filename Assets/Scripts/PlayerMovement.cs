@@ -47,6 +47,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Sliding Settings")]
     [SerializeField] private float slideTimerMax = 1.5f;
+    [SerializeField] private float slideSpeedReductionRate = 0.5f;
     private bool sprintButtonHeld = false;
     private float slideTimer = 0.0f;
     private Vector3 slideDirection;
@@ -57,11 +58,17 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float wallRunGravity = -1f;
     [SerializeField] private float wallRunTimerMax = 2f;
     [SerializeField] private float wallJumpForce = 5f;
+    [SerializeField] private float wallrunRotationalSpeed = 4f;
     private float wallRunTimer = 0.0f;
     private Vector3 wallRunDirection;
+    private Vector3 wallNormal;
+    private Quaternion targetRotation;
     private float horizontalVelocity;
     [HideInInspector] public bool wallRunRight;
     [HideInInspector] public bool wallRunLeft;
+
+    [Header("Ledge Grab Settings")]
+    [SerializeField] private LayerMask ledgeMask;
 
     
     [Header("Ground Check Settings")]
@@ -71,9 +78,7 @@ public class PlayerMovement : MonoBehaviour
     {
         get
         {
-            // Cast a ray downwards from the player's position
             Ray ray = new Ray(transform.position, -transform.up);
-            // Check if the ray hits the ground within the specified distance
             return Physics.Raycast(ray, groundDistance, groundMask);
         }
     }
@@ -133,6 +138,7 @@ public class PlayerMovement : MonoBehaviour
         JumpHandler();
         LandingHandler();
         CrouchHandler();
+        LedgeGrabHandler();
         MovementHandler();
 
         // Set slideDirection when a slide is initiated
@@ -140,8 +146,6 @@ public class PlayerMovement : MonoBehaviour
         {
             slideDirection = playerDirection;
         }
-
-        Debug.Log(isAnimating);
     }
 
     void LateUpdate()
@@ -173,7 +177,6 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             verticalVelocity += gravity * Time.deltaTime;
-            horizontalVelocity = Mathf.Lerp(horizontalVelocity, 0, Time.deltaTime * lerpTime);
         }
     }
 
@@ -185,7 +188,7 @@ public class PlayerMovement : MonoBehaviour
         }
         else if (isSliding)
         {
-            currentSpeed = Mathf.Min((Mathf.Pow(slideTimer, 2) + 0.2f) * slideSpeed, 16);
+            currentSpeed = Mathf.Min((Mathf.Pow(slideTimer, slideSpeedReductionRate) + 0.2f) * slideSpeed, 16);
         }
         else if (isWallRunning)
         {
@@ -317,19 +320,22 @@ public class PlayerMovement : MonoBehaviour
 
     private bool CheckWall()
     {
+        RaycastHit hit;
         // Ray to the right
         Ray rightRay = new Ray(transform.position, transform.right);
-        if (Physics.Raycast(rightRay, wallRayDistance, wallMask))
+        if (Physics.Raycast(rightRay, out hit, wallRayDistance, wallMask))
         {
             wallRunRight = true;
+            wallNormal = -hit.normal;
             return true;
         }
 
         // Ray to the left
         Ray leftRay = new Ray(transform.position, -transform.right);
-        if (Physics.Raycast(leftRay, wallRayDistance, wallMask))
+        if (Physics.Raycast(leftRay, out hit, wallRayDistance, wallMask))
         {
             wallRunLeft = true;
+            wallNormal = hit.normal;
             return true;
         }
 
@@ -346,7 +352,16 @@ public class PlayerMovement : MonoBehaviour
             wallRunTimer = wallRunTimerMax;
             isWallRunning = true;
             isFreelooking = true;
-            wallRunDirection = playerDirection;  
+            //wallRunDirection = playerDirection;
+
+            // Calculate a direction that is along the wall
+            Vector3 alongWall = Vector3.Cross(wallNormal, Vector3.up);
+
+            // Set the wall run direction to be along the wall
+            wallRunDirection = alongWall;
+
+            // Calculate the target rotation
+            targetRotation = Quaternion.LookRotation(alongWall);
         }
         else if (!CheckWall() || isGrounded || controller.velocity.magnitude < 9 || !sprintButtonHeld)
         {
@@ -361,6 +376,10 @@ public class PlayerMovement : MonoBehaviour
         if (isWallRunning)
         {
             wallRunTimer -= Time.deltaTime;
+
+            // Smoothly rotate player to face the direction along the wall
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * wallrunRotationalSpeed);
+
             if (wallRunTimer <= 0)
             {
                 isWallRunning = false;
@@ -400,11 +419,27 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    void LedgeGrabHandler()
+    {
+        if (lastVerticalVelocity < 0 && !isGrounded)
+        {
+            RaycastHit downHit;
+            Vector3 lineDownRayStart = (transform.position + Vector3.up * 0.6f) + transform.forward * 0.1f;
+            Vector3 lineDownRayEnd = (transform.position + Vector3.up * 0.3f) + transform.forward * 0.1f;
+            Physics.Linecast(lineDownRayStart, lineDownRayEnd, out downHit, ledgeMask);
+            Debug.DrawLine(lineDownRayStart, lineDownRayEnd, Color.red);
+        }
+    }
+
     void MovementHandler()
     {
         if (isGrounded)
         {
             playerDirection = Vector3.Lerp(playerDirection,(transform.forward * currentMovementInput.y + transform.right * currentMovementInput.x), Time.deltaTime * lerpTime);
+        }
+        else if (isWallRunning)
+        {
+            playerDirection = Vector3.Lerp(playerDirection,(wallRunDirection), Time.deltaTime * lerpTime);
         }
         else if (isMoving)
         {
@@ -417,7 +452,7 @@ public class PlayerMovement : MonoBehaviour
         }
         else if (isWallRunning)
         {
-            controller.Move(wallRunDirection * currentSpeed * Time.deltaTime);
+            controller.Move(playerDirection * currentSpeed * Time.deltaTime);
         }
         else
         {
