@@ -63,12 +63,15 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 wallRunDirection;
     private Vector3 wallNormal;
     private Quaternion targetRotation;
+    private float wallJumpRotationProgress = -1;
     private float horizontalVelocity;
+    private bool wallFront;
     [HideInInspector] public bool wallRunRight;
     [HideInInspector] public bool wallRunLeft;
 
     [Header("Ledge Grab Settings")]
     [SerializeField] private LayerMask ledgeMask;
+    private Vector3 ledgePosition;
 
     
     [Header("Ground Check Settings")]
@@ -100,6 +103,7 @@ public class PlayerMovement : MonoBehaviour
     private bool isWalking;
     private bool isSprinting;
     private bool isCrouching;
+    private bool isLedgeGrabbing;
     private bool isAnimating;
     [HideInInspector] public bool isFreelooking;
     [HideInInspector] public bool isSliding;
@@ -139,6 +143,7 @@ public class PlayerMovement : MonoBehaviour
         LandingHandler();
         CrouchHandler();
         LedgeGrabHandler();
+        WallBounceHandler();
         MovementHandler();
 
         // Set slideDirection when a slide is initiated
@@ -173,6 +178,10 @@ public class PlayerMovement : MonoBehaviour
         else if (isWallRunning)
         {
             verticalVelocity = Mathf.Lerp(verticalVelocity, wallRunGravity, Time.deltaTime * lerpTime);
+        }
+        else if (isLedgeGrabbing)
+        {
+            verticalVelocity = 0;
         }
         else
         {
@@ -367,7 +376,7 @@ public class PlayerMovement : MonoBehaviour
         {
             isWallRunning = false;
 
-            if (!isSliding && !freeLookButtonPressed)
+            if (!isSliding && !freeLookButtonPressed && !isLedgeGrabbing)
             {
                 isFreelooking = false;
             }
@@ -424,10 +433,66 @@ public class PlayerMovement : MonoBehaviour
         if (lastVerticalVelocity < 0 && !isGrounded)
         {
             RaycastHit downHit;
-            Vector3 lineDownRayStart = (transform.position + Vector3.up * 0.6f) + transform.forward * 0.1f;
-            Vector3 lineDownRayEnd = (transform.position + Vector3.up * 0.3f) + transform.forward * 0.1f;
+            Vector3 lineDownRayStart = (transform.position + Vector3.up * 0.6f) + transform.forward * 0.8f;
+            Vector3 lineDownRayEnd = (transform.position + Vector3.up * 0.3f) + transform.forward * 0.8f;
             Physics.Linecast(lineDownRayStart, lineDownRayEnd, out downHit, ledgeMask);
             Debug.DrawLine(lineDownRayStart, lineDownRayEnd, Color.red);
+            
+
+            if (downHit.collider != null)
+            {
+                RaycastHit forwardHit;
+                Vector3 lineForwardRayStart = new Vector3 (transform.position.x , downHit.point.y - 0.1f, transform.position.z);
+                Vector3 lineForwardRayEnd = lineForwardRayStart + transform.forward * 0.8f;
+                Physics.Linecast(lineForwardRayStart, lineForwardRayEnd, out forwardHit, ledgeMask);
+                Debug.DrawLine(lineForwardRayStart, lineForwardRayEnd, Color.red);
+
+                Debug.Log(forwardHit.collider);
+
+                if (forwardHit.collider != null)
+                {
+                    Debug.Log("Ledge Grab");
+                    isLedgeGrabbing = true;
+                    isFreelooking = true;
+                    isAnimating = true;
+                    cameraAnimator.SetTrigger("CameraLedgeGrabTrigger");
+
+                    ledgePosition = downHit.point;
+                }
+            }
+        }
+    }
+
+    void WallBounceHandler()
+    {
+        RaycastHit frontHit;
+        Ray frontRay = new Ray(transform.position, transform.forward);
+        if (Physics.Raycast(frontRay, out frontHit, 1.1f, wallMask))
+        {
+            wallFront = true;
+        }
+        else
+        {
+            wallFront = false;
+        }
+
+        if (wallJumpRotationProgress >= 0)
+        {
+            // Increment the progress of the rotation
+            wallJumpRotationProgress += Time.deltaTime;
+
+            // Calculate the fraction of the total rotation to complete this frame
+            float fraction = wallJumpRotationProgress / 0.4f;
+
+            // Interpolate between the player's current rotation and the target rotation
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, fraction);
+
+            // If the rotation is complete
+            if (fraction >= 1)
+            {
+                // Reset the progress of the rotation
+                wallJumpRotationProgress = -1;
+            }
         }
     }
 
@@ -441,6 +506,10 @@ public class PlayerMovement : MonoBehaviour
         {
             playerDirection = Vector3.Lerp(playerDirection,(wallRunDirection), Time.deltaTime * lerpTime);
         }
+        else if (isLedgeGrabbing)
+        {
+            playerDirection = Vector3.zero;
+        }
         else if (isMoving)
         {
             playerDirection = Vector3.Lerp(playerDirection,(transform.forward * currentMovementInput.y + transform.right * currentMovementInput.x), Time.deltaTime * airLerpTime);
@@ -449,6 +518,23 @@ public class PlayerMovement : MonoBehaviour
         if (isSliding)
         {
             controller.Move(slideDirection * currentSpeed * Time.deltaTime);
+        }
+        else if (isLedgeGrabbing)
+        {
+            // Calculate the target position: the ledge position plus some offset
+            Vector3 targetPosition = ledgePosition + new Vector3(0, 1.5f, 0); // Adjust the offset as needed
+
+            // Smoothly move the player to the target position
+            transform.position = Vector3.Lerp(transform.position, targetPosition, Time.fixedDeltaTime * lerpTime);
+
+            // If the player is close enough to the target position
+            if (Vector3.Distance(transform.position, targetPosition) < 0.1f)
+            {
+                // Stop ledge grabbing
+                isLedgeGrabbing = false;
+                isFreelooking = false;
+                isAnimating = false;
+            }
         }
         else if (isWallRunning)
         {
@@ -502,6 +588,18 @@ public class PlayerMovement : MonoBehaviour
             wallRunTimer = 0;
             isWallRunning = false;
             isFreelooking = false;
+        }
+        else if (context.performed && !isGrounded && wallFront)
+        {
+            verticalVelocity = jumpForce/1.2f;
+            playerDirection = Vector3.zero;
+            playerDirection += -transform.forward * wallJumpForce/2f;
+            cameraAnimator.SetTrigger("CameraWallBounceTrigger");
+
+            // Create a rotation that looks in the opposite direction of the wall
+            targetRotation = Quaternion.LookRotation(-transform.forward);
+
+           wallJumpRotationProgress = 0;
         }
     }
 
