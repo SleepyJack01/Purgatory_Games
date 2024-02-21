@@ -81,7 +81,8 @@ public class PlayerMovement : MonoBehaviour
         get
         {
             Ray ray = new Ray(transform.position, -transform.up);
-            return Physics.Raycast(ray, groundDistance, groundMask);
+            //return Physics.Raycast(ray, groundDistance, groundMask);
+            return Physics.SphereCast(ray, controller.radius, groundDistance, groundMask);
         }
     }
 
@@ -160,7 +161,7 @@ public class PlayerMovement : MonoBehaviour
             isSprinting = false;
         }
 
-        Debug.Log(isSprinting);
+        Debug.Log(lastVerticalVelocity);
     }
 
     void LateUpdate()
@@ -291,7 +292,7 @@ public class PlayerMovement : MonoBehaviour
 
         else if (canStand)
         {
-            float newHeight = Mathf.Lerp(controller.height, 2f, Time.deltaTime * lerpTime);
+            float newHeight = Mathf.Lerp(controller.height, 1.95f, Time.deltaTime * lerpTime);
             float heightDifference = newHeight - controller.height;
             controller.height = newHeight;
             if (heightDifference > 0)
