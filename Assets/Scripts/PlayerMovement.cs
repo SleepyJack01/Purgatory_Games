@@ -64,7 +64,6 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 wallNormal;
     private Quaternion targetRotation;
     private float wallJumpRotationProgress = -1;
-    private float horizontalVelocity;
     private bool wallFront;
     [HideInInspector] public bool wallRunRight;
     [HideInInspector] public bool wallRunLeft;
@@ -151,6 +150,17 @@ public class PlayerMovement : MonoBehaviour
         {
             slideDirection = playerDirection;
         }
+
+        if (sprintButtonHeld && !isCrouching)
+        {
+            isSprinting = true;
+        }
+        else
+        {
+            isSprinting = false;
+        }
+
+        Debug.Log(isSprinting);
     }
 
     void LateUpdate()
