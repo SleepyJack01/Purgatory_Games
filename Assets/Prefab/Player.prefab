@@ -249,8 +249,8 @@ CharacterController:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Height: 1.98
-  m_Radius: 0.2
+  m_Height: 1.95
+  m_Radius: 0.3
   m_SlopeLimit: 45
   m_StepOffset: 0.3
   m_SkinWidth: 0.05
@@ -416,7 +416,7 @@ MonoBehaviour:
   playerInput: {fileID: 4359600902925218785}
   playerMovement: {fileID: 4359600902925218784}
   mouseSensitivity: 0.1
-  controllerSensitivity: 100
+  controllerSensitivity: 150
   cameraClamp: 85
   freeLookMaxAngle: 120
   freeLookTiltAmount: 0.2
