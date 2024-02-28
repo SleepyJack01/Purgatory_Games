@@ -533,7 +533,7 @@ public class PlayerMovement : MonoBehaviour
         else if (isLedgeGrabbing)
         {
             // Calculate the target position: the ledge position plus some offset
-            Vector3 targetPosition = ledgePosition + new Vector3(0, 1.5f, 0); // Adjust the offset as needed
+            Vector3 targetPosition = ledgePosition + new Vector3(0, 1.5f, 0);
 
             // Smoothly move the player to the target position
             transform.position = Vector3.Lerp(transform.position, targetPosition, Time.fixedDeltaTime * lerpTime);
