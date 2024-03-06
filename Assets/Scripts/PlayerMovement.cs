@@ -57,9 +57,11 @@ public class PlayerMovement : MonoBehaviour
     [ SerializeField] private float wallRayDistance = 1f;
     [SerializeField] private float wallRunGravity = -1f;
     [SerializeField] private float wallRunTimerMax = 2f;
+    [SerializeField] private float wallRunCallDownTimerMax = 1f;
     [SerializeField] private float wallJumpForce = 5f;
     [SerializeField] private float wallrunRotationalSpeed = 4f;
     private float wallRunTimer = 0.0f;
+    private float wallRunCallDownTimer = 0.0f;
     private Vector3 wallRunDirection;
     private Vector3 wallNormal;
     private Quaternion targetRotation;
@@ -103,6 +105,7 @@ public class PlayerMovement : MonoBehaviour
     private bool isWalking;
     private bool isSprinting;
     private bool isCrouching;
+    private bool isStandingUp;
     private bool isLedgeGrabbing;
     private bool isAnimating;
     [HideInInspector] public bool isFreelooking;
@@ -161,7 +164,7 @@ public class PlayerMovement : MonoBehaviour
             isSprinting = false;
         }
 
-        Debug.Log(lastVerticalVelocity);
+        Debug.Log(isCrouching);
     }
 
     void LateUpdate()
@@ -282,7 +285,6 @@ public class PlayerMovement : MonoBehaviour
                 isSliding = true;
                 slideTimer = slideTimerMax;
                 isFreelooking = true;
-                
             }
         
             isWalking = false;
@@ -311,7 +313,12 @@ public class PlayerMovement : MonoBehaviour
             }
             
             isCrouching = false;
-        }   
+        }
+
+        else
+        {
+            isCrouching = true;
+        }
     }
 
     void SlideHandler()
@@ -367,12 +374,11 @@ public class PlayerMovement : MonoBehaviour
     void WallRunHandler()
     {
 
-        if (controller.velocity.magnitude > 9 && !isGrounded && CheckWall() && !isWallRunning && sprintButtonHeld)
+        if (controller.velocity.magnitude > 9 && !isGrounded && CheckWall() && !isWallRunning && sprintButtonHeld && wallRunTimer <= 0 && wallRunCallDownTimer <= 0)
         {
             wallRunTimer = wallRunTimerMax;
             isWallRunning = true;
             isFreelooking = true;
-            //wallRunDirection = playerDirection;
 
             // Calculate a direction that is along the wall
             Vector3 alongWall = Vector3.Cross(wallNormal, Vector3.up);
@@ -404,6 +410,15 @@ public class PlayerMovement : MonoBehaviour
             {
                 isWallRunning = false;
                 isFreelooking = false;
+                wallRunCallDownTimer = wallRunCallDownTimerMax;
+            }
+        }
+        else
+        {
+            wallRunCallDownTimer -= Time.deltaTime;
+            if (wallRunCallDownTimer <= 0)
+            {
+                wallRunTimer = 0;
             }
         }
     }
@@ -443,18 +458,35 @@ public class PlayerMovement : MonoBehaviour
     {
         if (lastVerticalVelocity < 0 && !isGrounded)
         {
+            Vector3 position = transform.position;
+            Vector3 forward = transform.forward;
+
             RaycastHit downHit;
-            Vector3 lineDownRayStart = (transform.position + Vector3.up * 0.6f) + transform.forward * 0.8f;
-            Vector3 lineDownRayEnd = (transform.position + Vector3.up * 0.3f) + transform.forward * 0.8f;
+            Vector3 lineDownRayStart = position + Vector3.up * 0.6f + forward * 0.8f;
+            Vector3 lineDownRayEnd = position + Vector3.up * 0.3f + forward * 0.8f;
             Physics.Linecast(lineDownRayStart, lineDownRayEnd, out downHit, ledgeMask);
             Debug.DrawLine(lineDownRayStart, lineDownRayEnd, Color.red);
-            
 
             if (downHit.collider != null)
             {
+                // Check if there is anything between the player and the downHit point
+                RaycastHit obstacleHit;
+                Vector3 playerPositionWithHeight = new Vector3(position.x, position.y + 1f, position.z);
+                Vector3 direction = (downHit.point - playerPositionWithHeight).normalized;
+                if (Physics.Raycast(playerPositionWithHeight, direction, out obstacleHit, Vector3.Distance(position, downHit.point), ledgeMask))
+                {
+                    // If there is an obstacle, do not proceed with the ledge grab
+                    if (obstacleHit.collider != null)
+                    {
+                        Debug.DrawLine(playerPositionWithHeight, downHit.point, Color.red);
+                        Debug.Log("Obstacle in the way, cannot grab ledge");
+                        return;
+                    }
+                }
+
                 RaycastHit forwardHit;
-                Vector3 lineForwardRayStart = new Vector3 (transform.position.x , downHit.point.y - 0.1f, transform.position.z);
-                Vector3 lineForwardRayEnd = lineForwardRayStart + transform.forward * 0.8f;
+                Vector3 lineForwardRayStart = new Vector3 (position.x , downHit.point.y - 0.1f, position.z);
+                Vector3 lineForwardRayEnd = lineForwardRayStart + forward * 0.8f;
                 Physics.Linecast(lineForwardRayStart, lineForwardRayEnd, out forwardHit, ledgeMask);
                 Debug.DrawLine(lineForwardRayStart, lineForwardRayEnd, Color.red);
 
