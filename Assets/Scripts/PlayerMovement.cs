@@ -11,7 +11,6 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] Transform eyes;
     [SerializeField] Animator cameraAnimator;
     private CharacterController controller;
-    private PlayerInput playerInput;
 
     [Header("Input Varibles")]
     private Vector2 currentMovementInput;
@@ -115,7 +114,6 @@ public class PlayerMovement : MonoBehaviour
     void Awake()
     {
         controller = GetComponent<CharacterController>();
-        playerInput = GetComponent<PlayerInput>();
         previousPosition = transform.position;
     }
 
