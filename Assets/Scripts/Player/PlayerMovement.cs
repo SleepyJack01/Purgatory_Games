@@ -66,6 +66,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 wallNormal;
     private Quaternion targetRotation;
     private float wallJumpRotationProgress = -1;
+    private bool canWallrun = false;
     private bool wallFront;
     [HideInInspector] public bool wallRunRight;
     [HideInInspector] public bool wallRunLeft;
@@ -373,7 +374,7 @@ public class PlayerMovement : MonoBehaviour
     void WallRunHandler()
     {
 
-        if (controller.velocity.magnitude > 9 && !isGrounded && CheckWall() && !isWallRunning && sprintButtonHeld && wallRunTimer <= 0 && wallRunCallDownTimer <= 0)
+        if (controller.velocity.magnitude > 8 && !isGrounded && CheckWall() && !isWallRunning && sprintButtonHeld && canWallrun && wallRunTimer <= 0 && wallRunCallDownTimer <= 0)
         {
             wallRunTimer = wallRunTimerMax;
             isWallRunning = true;
@@ -388,7 +389,7 @@ public class PlayerMovement : MonoBehaviour
             // Calculate the target rotation
             targetRotation = Quaternion.LookRotation(alongWall);
         }
-        else if (!CheckWall() || isGrounded || controller.velocity.magnitude < 9 || !sprintButtonHeld)
+        else if (!CheckWall() || isGrounded || controller.velocity.magnitude < 8 || !sprintButtonHeld)
         {
             isWallRunning = false;
 
@@ -506,7 +507,7 @@ public class PlayerMovement : MonoBehaviour
     {
         RaycastHit frontHit;
         Ray frontRay = new Ray(transform.position, transform.forward);
-        if (Physics.Raycast(frontRay, out frontHit, 1.1f, wallMask))
+        if (Physics.Raycast(frontRay, out frontHit, 0.8f, wallMask))
         {
             wallFront = true;
         }
@@ -617,6 +618,7 @@ public class PlayerMovement : MonoBehaviour
                 isAnimating = true;
             }
         }
+
         else if (context.performed && isWallRunning)
         {
             verticalVelocity = jumpForce;
@@ -643,6 +645,15 @@ public class PlayerMovement : MonoBehaviour
             targetRotation = Quaternion.LookRotation(-transform.forward);
 
            wallJumpRotationProgress = 0;
+        }
+
+        if (!isGrounded && CheckWall())
+        {
+            canWallrun = true;
+        }
+        else
+        {
+            canWallrun = false;
         }
     }
 
