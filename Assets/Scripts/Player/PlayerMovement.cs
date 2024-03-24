@@ -168,6 +168,8 @@ public class PlayerMovement : MonoBehaviour
         {
             isSprinting = false;
         }
+
+        Debug.Log(controller.velocity);
     }
 
     void LateUpdate()
