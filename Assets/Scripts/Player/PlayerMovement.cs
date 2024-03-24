@@ -58,8 +58,11 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float wallRunGravity = -1f;
     [SerializeField] private float wallRunTimerMax = 2f;
     [SerializeField] private float wallRunCallDownTimerMax = 1f;
-    [SerializeField] private float wallJumpForce = 5f;
+    [SerializeField] private float wallJumpForce = 0.8f;
+    [SerializeField] private float wallForwardJumpForce = 0.4f;
+    [SerializeField] private float wallSideJumpForce = 0.2f;
     [SerializeField] private float wallrunRotationalSpeed = 4f;
+    [SerializeField] private float checkWallFrontRayDistance = 0.5f;
     private float wallRunTimer = 0.0f;
     private float wallRunCallDownTimer = 0.0f;
     private Vector3 wallRunDirection;
@@ -507,7 +510,7 @@ public class PlayerMovement : MonoBehaviour
     {
         RaycastHit frontHit;
         Ray frontRay = new Ray(transform.position, transform.forward);
-        if (Physics.Raycast(frontRay, out frontHit, 0.8f, wallMask))
+        if (Physics.Raycast(frontRay, out frontHit, checkWallFrontRayDistance, wallMask))
         {
             wallFront = true;
         }
@@ -622,14 +625,37 @@ public class PlayerMovement : MonoBehaviour
         else if (context.performed && isWallRunning)
         {
             verticalVelocity = jumpForce;
+
             if (wallRunRight)
             {
-                playerDirection += -transform.right * wallJumpForce;
+                // If the player is inputting to the left, increase the side jump force
+                if (currentMovementInput.x < -0.1)
+                {
+                    playerDirection += -transform.right * wallSideJumpForce * 2f;
+                }
+                else // Otherwise, use the normal side jump force
+                {
+                    playerDirection += -transform.right * wallSideJumpForce;
+                }  
             }
             else if (wallRunLeft)
             {
-                playerDirection += transform.right * wallJumpForce;
+                // If the player is inputting to the right, increase the side jump force
+                if (currentMovementInput.x > 0.1)
+                {
+                    playerDirection += transform.right * wallSideJumpForce * 2f;
+                }
+                else // Otherwise, use the normal side jump force
+                {
+                    playerDirection += transform.right * wallSideJumpForce;
+                }
             }
+
+            // Propell the player forward
+            playerDirection += transform.forward * wallForwardJumpForce;
+            
+            //cameraAnimator.SetTrigger("CameraWallBounceTrigger");
+
             wallRunTimer = 0;
             isWallRunning = false;
             isFreelooking = false;

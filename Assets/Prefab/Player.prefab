@@ -164,6 +164,7 @@ GameObject:
   - component: {fileID: 4359600902925218785}
   - component: {fileID: 4359600902925218786}
   - component: {fileID: 4359600902925218784}
+  - component: {fileID: 1149760942}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -457,6 +458,8 @@ MonoBehaviour:
   wallRunTimerMax: 2
   wallRunCallDownTimerMax: 1
   wallJumpForce: 0.8
+  wallForwardJumpForce: 0.2
+  wallSideJumpForce: 0.4
   wallrunRotationalSpeed: 4
   wallRunRight: 0
   wallRunLeft: 0
@@ -471,6 +474,24 @@ MonoBehaviour:
   isFreelooking: 0
   isSliding: 0
   isWallRunning: 0
+--- !u!114 &1149760942
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4359600902925218808}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5e92fc4d93069b4985aa2ae36d968b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  respawnPoints:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  uiAnimator: {fileID: 0}
+  isDead: 0
 --- !u!1 &4359600903505904142
 GameObject:
   m_ObjectHideFlags: 0
