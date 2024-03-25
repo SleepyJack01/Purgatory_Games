@@ -18,6 +18,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 playerDirection;
     private Vector3 previousPosition;
     private float lastVerticalVelocity;
+    private float lastForwardVelocity;
     private bool freeLookButtonPressed;
     
     [Header("Speed Settings")]
@@ -76,6 +77,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Ledge Grab Settings")]
     [SerializeField] private LayerMask ledgeMask;
+    [SerializeField] private float ledgeLerpTime = 2f;
     private Vector3 ledgePosition;
 
     
@@ -169,7 +171,7 @@ public class PlayerMovement : MonoBehaviour
             isSprinting = false;
         }
 
-        Debug.Log(controller.velocity);
+        Debug.Log(lastForwardVelocity);
     }
 
     void LateUpdate()
@@ -183,6 +185,16 @@ public class PlayerMovement : MonoBehaviour
         Vector3 newPosition = transform.position;
         float verticalVelocity = (newPosition.y - previousPosition.y) / Time.deltaTime;
         lastVerticalVelocity = verticalVelocity;
+
+        // Calculate forward velocity in global space
+        Vector3 globalVelocity = (newPosition - previousPosition) / Time.deltaTime;
+
+        // Transform the global velocity into local velocity
+        Vector3 localVelocity = transform.InverseTransformDirection(globalVelocity);
+
+        // The forward velocity is the z-component of the local velocity
+        float forwardVelocity = localVelocity.z;
+        lastForwardVelocity = forwardVelocity;
 
         // Store the current position for the next frame
         previousPosition = newPosition;
@@ -438,9 +450,14 @@ public class PlayerMovement : MonoBehaviour
     {
         if (isGrounded && !isSliding)
         {
-            if (lastVerticalVelocity < -10 && !isAnimating)
+            if (lastVerticalVelocity < -10 && lastForwardVelocity > 5 && !isAnimating)
             {
                 cameraAnimator.SetTrigger("CameraRollTrigger");
+                isAnimating = true;
+            }
+            else if (lastVerticalVelocity < -10 && lastForwardVelocity < 5 && !isAnimating)
+            {
+                cameraAnimator.SetTrigger("CameraHardLandTrigger");
                 isAnimating = true;
             }
             else if (lastVerticalVelocity < -4 && !isAnimating)
@@ -573,16 +590,22 @@ public class PlayerMovement : MonoBehaviour
             // Calculate the target position: the ledge position plus some offset
             Vector3 targetPosition = ledgePosition + new Vector3(0, 1.5f, 0);
 
-            // Smoothly move the player to the target position
-            transform.position = Vector3.Lerp(transform.position, targetPosition, Time.fixedDeltaTime * lerpTime);
+            // Calculate the direction and distance to the target position
+            Vector3 directionToTarget = (targetPosition - transform.position).normalized;
+            float distanceToTarget = Vector3.Distance(transform.position, targetPosition);
 
             // If the player is close enough to the target position
-            if (Vector3.Distance(transform.position, targetPosition) < 0.1f)
+            if (distanceToTarget < 0.1f)
             {
                 // Stop ledge grabbing
                 isLedgeGrabbing = false;
                 isFreelooking = false;
                 isAnimating = false;
+            }
+            else
+            {
+                // Smoothly move the player to the target position
+                controller.Move(directionToTarget * Time.fixedDeltaTime * ledgeLerpTime);
             }
         }
         else if (isWallRunning)
