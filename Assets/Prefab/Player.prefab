@@ -443,13 +443,14 @@ MonoBehaviour:
   walkSpeed: 6
   sprintSpeed: 12
   wallRunSpeed: 14
-  slideSpeed: 18
+  slideSpeed: 25
+  minSlideSpeed: 18
   lerpTime: 6
   airLerpTime: 0.8
   gravity: -9.81
   jumpForce: 6
-  slideTimerMax: 1
-  slideSpeedReductionRate: 0.5
+  slideTimerMax: 0.5
+  slideSpeedReductionRate: 0.4
   wallMask:
     serializedVersion: 2
     m_Bits: 8
@@ -461,11 +462,13 @@ MonoBehaviour:
   wallForwardJumpForce: 0.2
   wallSideJumpForce: 0.4
   wallrunRotationalSpeed: 4
+  checkWallFrontRayDistance: 0.5
   wallRunRight: 0
   wallRunLeft: 0
   ledgeMask:
     serializedVersion: 2
     m_Bits: 8
+  ledgeLerpTime: 2
   groundMask:
     serializedVersion: 2
     m_Bits: 8
@@ -491,7 +494,11 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   uiAnimator: {fileID: 0}
+  heatBarHandler: {fileID: 0}
+  maxHeat: 240
+  currentHeat: 0
   isDead: 0
+  isHeated: 1
 --- !u!1 &4359600903505904142
 GameObject:
   m_ObjectHideFlags: 0
@@ -618,7 +625,7 @@ Camera:
   m_GameObject: {fileID: 4359600903723074772}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 2
+  m_ClearFlags: 1
   m_BackGroundColor: {r: 0.7169812, g: 0.7169812, b: 0.7169812, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
@@ -684,7 +691,7 @@ MonoBehaviour:
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
   m_RenderPostProcessing: 1
-  m_Antialiasing: 0
+  m_Antialiasing: 2
   m_AntialiasingQuality: 2
   m_StopNaN: 0
   m_Dithering: 0

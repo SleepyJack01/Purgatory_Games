@@ -26,7 +26,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float walkSpeed = 6f;
     [SerializeField] float sprintSpeed = 12f;
     [SerializeField] float wallRunSpeed = 12f;
-    [SerializeField] private float slideSpeed = 16f;
+    [SerializeField] private float slideSpeed = 30f;
+    [SerializeField] private float minSlideSpeed = 20f;
     [SerializeField] float lerpTime = 6f;
     [SerializeField] float airLerpTime = 1f;
     private float currentSpeed;
@@ -171,7 +172,7 @@ public class PlayerMovement : MonoBehaviour
             isSprinting = false;
         }
 
-        Debug.Log(lastForwardVelocity);
+        //Debug.Log(lastForwardVelocity);
     }
 
     void LateUpdate()
@@ -228,7 +229,7 @@ public class PlayerMovement : MonoBehaviour
         }
         else if (isSliding)
         {
-            currentSpeed = Mathf.Min((Mathf.Pow(slideTimer, slideSpeedReductionRate) + 0.2f) * slideSpeed, 16);
+            currentSpeed = Mathf.Min((Mathf.Pow(slideTimerMax - slideTimer, slideSpeedReductionRate) + 0.2f) * slideSpeed, minSlideSpeed);
         }
         else if (isWallRunning)
         {

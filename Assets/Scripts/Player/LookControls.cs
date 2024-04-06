@@ -14,6 +14,7 @@ public class LookControls : MonoBehaviour
     [SerializeField] Transform camPostion;
     [SerializeField] PlayerInput playerInput;
     [SerializeField] PlayerMovement playerMovement;
+    [SerializeField] PauseMenuHandler pauseMenuHandler;
 
     [Header("Sensitivity Settings")]
     [SerializeField] float mouseSensitivity = 10f;
@@ -40,9 +41,10 @@ public class LookControls : MonoBehaviour
 
     void Awake()
     {
-        playerInput = GetComponent<PlayerInput>();
+        playerInput = FindObjectOfType<PlayerInput>();
         playerInput.onControlsChanged += ctx => SetSensitivity();
         playerMovement = GetComponent<PlayerMovement>();
+        pauseMenuHandler = FindObjectOfType<PauseMenuHandler>();
     }
 
     void Start()
@@ -152,6 +154,12 @@ public class LookControls : MonoBehaviour
     // Gets the raw input from the input system
     public void OnLook(InputAction.CallbackContext context)
     {
+        if (pauseMenuHandler.isPaused)
+        {
+            lookInput = Vector2.zero;
+            return;
+        }
+
         lookInput = context.ReadValue<Vector2>();
     }
 }
