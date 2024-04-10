@@ -79,6 +79,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Ledge Grab Settings")]
     [SerializeField] private LayerMask ledgeMask;
     [SerializeField] private float ledgeLerpTime = 2f;
+    [SerializeField] private float fowardRayDistance = 1f;
     private Vector3 ledgePosition;
 
     
@@ -485,8 +486,8 @@ public class PlayerMovement : MonoBehaviour
             Vector3 forward = transform.forward;
 
             RaycastHit downHit;
-            Vector3 lineDownRayStart = position + Vector3.up * 0.6f + forward * 0.8f;
-            Vector3 lineDownRayEnd = position + Vector3.up * 0.3f + forward * 0.8f;
+            Vector3 lineDownRayStart = position + Vector3.up * 0.6f + forward * fowardRayDistance;
+            Vector3 lineDownRayEnd = position + Vector3.up * 0.3f + forward * fowardRayDistance;
             Physics.Linecast(lineDownRayStart, lineDownRayEnd, out downHit, ledgeMask);
             Debug.DrawLine(lineDownRayStart, lineDownRayEnd, Color.red);
 
@@ -509,7 +510,7 @@ public class PlayerMovement : MonoBehaviour
 
                 RaycastHit forwardHit;
                 Vector3 lineForwardRayStart = new Vector3 (position.x , downHit.point.y - 0.1f, position.z);
-                Vector3 lineForwardRayEnd = lineForwardRayStart + forward * 0.8f;
+                Vector3 lineForwardRayEnd = lineForwardRayStart + forward * fowardRayDistance;
                 Physics.Linecast(lineForwardRayStart, lineForwardRayEnd, out forwardHit, ledgeMask);
                 Debug.DrawLine(lineForwardRayStart, lineForwardRayEnd, Color.red);
 
@@ -596,7 +597,7 @@ public class PlayerMovement : MonoBehaviour
             float distanceToTarget = Vector3.Distance(transform.position, targetPosition);
 
             // If the player is close enough to the target position
-            if (distanceToTarget < 0.1f)
+            if (distanceToTarget < 0.3f)
             {
                 // Stop ledge grabbing
                 isLedgeGrabbing = false;
