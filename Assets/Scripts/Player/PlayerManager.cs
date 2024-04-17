@@ -45,7 +45,7 @@ public class PlayerManager : MonoBehaviour
         {
             if (currentHeat < maxHeat)
             {
-                currentHeat += Time.deltaTime * 16;
+                currentHeat += Time.deltaTime * 32;
             }
         }
 

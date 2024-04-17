@@ -76,7 +76,7 @@ public class PauseMenuHandler : MonoBehaviour
     {
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-        StartCoroutine(LoadScene("MainMenu"));
+        StartCoroutine(LoadScene("Main Menu"));
     }
 
     public void DebugButton1()
