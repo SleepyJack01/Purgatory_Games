@@ -38,7 +38,7 @@ public class PlayerManager : MonoBehaviour
             currentHeat -= Time.deltaTime * 2;
             if (currentHeat <= 0)
             {
-                StartCoroutine(ColdRespawn());
+                StartCoroutine(Respawn());
             }
         }
         else

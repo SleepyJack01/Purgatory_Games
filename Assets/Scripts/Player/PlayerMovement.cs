@@ -10,6 +10,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] Transform head;
     [SerializeField] Transform eyes;
     [SerializeField] Animator cameraAnimator;
+    [SerializeField] private PlayerInput playerInput;
     private PlayerManager playerManager;
     private CharacterController controller;
 
@@ -98,9 +99,6 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Player Headbob Settings")]
     [SerializeField] bool enableHeadBob = true;
-    private float headBobSprintSpeed = 22f;
-    private float headBobWalkSpeed = 14f;
-    private float headBobCrouchSpeed = 10f;
     private float headBobSprintIntensity = 0.2f;
     private float headBobWalkIntensity = 0.1f;
     private float headBobCrouchIntensity = 0.05f;
@@ -120,6 +118,9 @@ public class PlayerMovement : MonoBehaviour
     [HideInInspector] public bool isSliding;
     [HideInInspector] public bool isWallRunning;
 
+    [Header("controller settings")]
+    private bool isGamepad;
+
     void Awake()
     {
         controller = GetComponent<CharacterController>();
@@ -137,9 +138,13 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
 
-        if (currentMovementInput == Vector2.zero)
+        if (currentMovementInput.magnitude < threshold)
         {
             isMoving = false;
+            if (isGamepad)
+            {
+                sprintButtonHeld = false;
+            }
         }
         else
         {
@@ -173,7 +178,7 @@ public class PlayerMovement : MonoBehaviour
             isSprinting = false;
         }
 
-        //Debug.Log(lastForwardVelocity);
+        Debug.Log(isMoving);
     }
 
     void LateUpdate()
@@ -200,6 +205,18 @@ public class PlayerMovement : MonoBehaviour
 
         // Store the current position for the next frame
         previousPosition = newPosition;
+    }
+
+    public void SetGamepad()
+    {
+        if(playerInput.currentControlScheme == "Gamepad")
+        {
+            isGamepad = true;
+        }
+        else
+        {
+            isGamepad = false;
+        }
     }
 
     void applyGravity()
@@ -251,22 +268,22 @@ public class PlayerMovement : MonoBehaviour
         if (isCrouching)
         {
             headBobCurrentIntensity = headBobCrouchIntensity;
-            headBobIndex += headBobCrouchSpeed * Time.deltaTime;
+            headBobIndex += (controller.velocity.magnitude * 2) * Time.deltaTime;
         }
          else if (isWallRunning)
         {
             headBobCurrentIntensity = headBobSprintIntensity;
-            headBobIndex += headBobSprintSpeed * Time.deltaTime;
+            headBobIndex += (controller.velocity.magnitude * 2)  * Time.deltaTime;
         }
         else if (isWalking)
         {
             headBobCurrentIntensity = headBobWalkIntensity;
-            headBobIndex += headBobWalkSpeed * Time.deltaTime;
+            headBobIndex += (controller.velocity.magnitude * 2)  * Time.deltaTime;
         }
         else  if (isSprinting)
         {
             headBobCurrentIntensity = headBobSprintIntensity;
-            headBobIndex += headBobSprintSpeed * Time.deltaTime;
+            headBobIndex += (controller.velocity.magnitude * 2) * Time.deltaTime;
         }
 
         if (isGrounded && isMoving || isWallRunning)
@@ -634,7 +651,17 @@ public class PlayerMovement : MonoBehaviour
 
     public void OnSprint(InputAction.CallbackContext context)
     {
-        sprintButtonHeld = context.performed;
+        if (isGamepad)
+        {
+            if (context.started && isMoving && !isCrouching)
+            {
+                sprintButtonHeld = !sprintButtonHeld;
+            }
+        }
+        else
+        {
+            sprintButtonHeld = context.performed;
+        }
     }
 
     public void OnJump(InputAction.CallbackContext context)
