@@ -138,7 +138,7 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
 
-        if (currentMovementInput.magnitude < threshold)
+        if (currentMovementInput.magnitude < threshold && !isWallRunning)
         {
             isMoving = false;
             if (isGamepad)
@@ -410,7 +410,7 @@ public class PlayerMovement : MonoBehaviour
     void WallRunHandler()
     {
 
-        if (controller.velocity.magnitude > 8 && !isGrounded && CheckWall() && !isWallRunning && sprintButtonHeld && canWallrun && wallRunTimer <= 0 && wallRunCallDownTimer <= 0)
+        if (controller.velocity.magnitude > 8 && !isGrounded && CheckWall() && !isWallRunning && sprintButtonHeld && !crouchPressed && canWallrun && wallRunTimer <= 0 && wallRunCallDownTimer <= 0)
         {
             wallRunTimer = wallRunTimerMax;
             isWallRunning = true;

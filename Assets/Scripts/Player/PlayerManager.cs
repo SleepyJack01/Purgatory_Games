@@ -8,6 +8,8 @@ public class PlayerManager : MonoBehaviour
     public Transform[] respawnPoints;
     [SerializeField] private Animator uiAnimator;
     [SerializeField] private HeatBarHandler heatBarHandler;
+    [SerializeField] private GameObject heatBar;
+    [SerializeField] private Animator heatBarAnimator;
     private CheckPointManager checkPointManager;
     private CharacterController characterController;
     public float maxHeat = 240;
@@ -71,6 +73,11 @@ public class PlayerManager : MonoBehaviour
         {
             isHeated = false;
             Debug.Log("Not Heated");
+            if (!heatBar.activeSelf)
+            {
+                heatBar.SetActive(true);
+                heatBarAnimator.SetTrigger("FadeIn");
+            }
         }
     }
 
