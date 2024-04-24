@@ -16,6 +16,7 @@ public class PlayerManager : MonoBehaviour
     public float currentHeat;
     public bool isDead = false;
     public bool isHeated = true;
+    private bool isRespawning = false;
     
 
     private void Start()
@@ -38,9 +39,9 @@ public class PlayerManager : MonoBehaviour
         if (!isHeated)
         {
             currentHeat -= Time.deltaTime * 2;
-            if (currentHeat <= 0)
+            if (currentHeat <= 0 && !isRespawning)
             {
-                StartCoroutine(Respawn());
+                StartCoroutine(ColdRespawn());
             }
         }
         else
@@ -114,7 +115,8 @@ public class PlayerManager : MonoBehaviour
     IEnumerator ColdRespawn()
     {
         Debug.Log("Respawning...");
-        uiAnimator.SetTrigger("SlowFadeOut");
+        isRespawning = true;
+        uiAnimator.SetTrigger("LongFadeOut");
         yield return new WaitForSeconds(2);
         isDead = true;
         characterController.enabled = false;
@@ -138,6 +140,7 @@ public class PlayerManager : MonoBehaviour
             currentHeat = maxHeat;
             characterController.enabled = true;
             uiAnimator.SetTrigger("FadeIn");
+            isRespawning = false;
         }
     }
 }

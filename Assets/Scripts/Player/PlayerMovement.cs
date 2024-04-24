@@ -614,7 +614,7 @@ public class PlayerMovement : MonoBehaviour
             float distanceToTarget = Vector3.Distance(transform.position, targetPosition);
 
             // If the player is close enough to the target position
-            if (distanceToTarget < 0.1f)
+            if (distanceToTarget < 0.3f)
             {
                 // Stop ledge grabbing
                 isLedgeGrabbing = false;
