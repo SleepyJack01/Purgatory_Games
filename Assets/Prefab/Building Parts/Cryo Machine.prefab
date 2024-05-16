@@ -1297,7 +1297,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 2e1f320f9826eb947bba6cd2210a0700, type: 2}
+  - {fileID: 2100000, guid: 822fc266ffddf6941bf41641d4ec0ad4, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1580,7 +1580,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 2e1f320f9826eb947bba6cd2210a0700, type: 2}
+      objectReference: {fileID: 2100000, guid: 06d40dc2e1401784eb420a0d2d5d7235, type: 2}
     - target: {fileID: 64106604948696046, guid: 7f93e1c20bd4df647865b27d7d1aaf19,
         type: 3}
       propertyPath: m_Convex
@@ -1840,6 +1840,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 23224213711294034, guid: 3f4a44b07f2255648b1eb50233937329,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: d8dfda64987cff5419b3497636a384d6, type: 2}
     - target: {fileID: 64978654054083020, guid: 3f4a44b07f2255648b1eb50233937329,
         type: 3}
       propertyPath: m_Enabled
@@ -1928,7 +1933,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 2e1f320f9826eb947bba6cd2210a0700, type: 2}
+      objectReference: {fileID: 2100000, guid: 06d40dc2e1401784eb420a0d2d5d7235, type: 2}
     - target: {fileID: 64515687202238112, guid: 58c33bc7eec745449b236f7bbd606abd,
         type: 3}
       propertyPath: m_Convex
@@ -2192,7 +2197,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 2e1f320f9826eb947bba6cd2210a0700, type: 2}
+      objectReference: {fileID: 2100000, guid: 06d40dc2e1401784eb420a0d2d5d7235, type: 2}
     - target: {fileID: 64382839391402236, guid: b9584665a205c0348bc64f178ac58f46,
         type: 3}
       propertyPath: m_Convex

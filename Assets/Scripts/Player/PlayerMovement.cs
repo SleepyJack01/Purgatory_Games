@@ -177,8 +177,6 @@ public class PlayerMovement : MonoBehaviour
         {
             isSprinting = false;
         }
-
-        Debug.Log(isMoving);
     }
 
     void LateUpdate()
@@ -531,7 +529,7 @@ public class PlayerMovement : MonoBehaviour
                 Physics.Linecast(lineForwardRayStart, lineForwardRayEnd, out forwardHit, ledgeMask);
                 Debug.DrawLine(lineForwardRayStart, lineForwardRayEnd, Color.red);
 
-                if (forwardHit.collider != null)
+                if (forwardHit.collider != null && !isLedgeGrabbing)
                 {
                     isLedgeGrabbing = true;
                     isFreelooking = true;
@@ -569,11 +567,13 @@ public class PlayerMovement : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, fraction);
 
             // If the rotation is complete
-            if (fraction >= 1)
+            if (fraction >= 1f)
             {
                 // Reset the progress of the rotation
                 wallJumpRotationProgress = -1;
             }
+
+            Debug.Log(fraction);
         }
     }
 
@@ -624,7 +624,7 @@ public class PlayerMovement : MonoBehaviour
             else
             {
                 // Smoothly move the player to the target position
-                controller.Move(directionToTarget * Time.fixedDeltaTime * ledgeLerpTime);
+                controller.Move(directionToTarget * Time.deltaTime * ledgeLerpTime);
             }
         }
         else if (isWallRunning)
