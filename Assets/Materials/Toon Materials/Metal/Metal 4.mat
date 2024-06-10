@@ -22,8 +22,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Metal 4
   m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
-  m_ValidKeywords:
-  - _DETAIL_MULX2
+  m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -37,14 +36,14 @@ Material:
     m_TexEnvs:
     - _BaseMap:
         m_Texture: {fileID: 2800000, guid: b82db99f3d495cc4d9cb4a700364349a, type: 3}
-        m_Scale: {x: 0.6, y: 0.6}
+        m_Scale: {x: 0.4, y: 0.4}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
-        m_Texture: {fileID: 2800000, guid: db360b3fb95c9274cac2d6f1c4ff14c2, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1.01, y: 1.38}
         m_Offset: {x: 0, y: 0}
     - _DetailMask:
@@ -61,7 +60,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 2800000, guid: b82db99f3d495cc4d9cb4a700364349a, type: 3}
-        m_Scale: {x: 0.6, y: 0.6}
+        m_Scale: {x: 0.4, y: 0.4}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
         m_Texture: {fileID: 0}
@@ -100,7 +99,7 @@ Material:
     - _ClearCoatSmoothness: 0
     - _Cull: 2
     - _Cutoff: 0.5
-    - _DetailAlbedoMapScale: 1
+    - _DetailAlbedoMapScale: 0.95
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _EnvironmentReflections: 1
