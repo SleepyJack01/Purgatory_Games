@@ -870,7 +870,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 12933
+  m_VersionIndex: 12937
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -923,7 +923,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 79d0ede865897d042b3816f69e4718be, type: 2}
-  - {fileID: 2100000, guid: 4eb6b237104c0b4488872d4bfac0e38d, type: 2}
+  - {fileID: 2100000, guid: 8f9b6f5917b01284cae81d2e00410d03, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1327,12 +1327,12 @@ PrefabInstance:
     - target: {fileID: 3024127597135927481, guid: 16478b06ff7402e4d84a807d414640f0,
         type: 3}
       propertyPath: m_SelectedEdges.Array.size
-      value: 4
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3024127597135927481, guid: 16478b06ff7402e4d84a807d414640f0,
         type: 3}
       propertyPath: m_SelectedFaces.Array.size
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3024127597135927481, guid: 16478b06ff7402e4d84a807d414640f0,
         type: 3}
@@ -1342,7 +1342,7 @@ PrefabInstance:
     - target: {fileID: 3024127597135927481, guid: 16478b06ff7402e4d84a807d414640f0,
         type: 3}
       propertyPath: m_SelectedVertices.Array.size
-      value: 4
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3024127597135927481, guid: 16478b06ff7402e4d84a807d414640f0,
         type: 3}
